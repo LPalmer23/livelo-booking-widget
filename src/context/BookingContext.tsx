@@ -1,52 +1,59 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+// src/context/BookingContext.tsx
+import { createContext, useContext, useState, type ReactNode } from "react";
 
-// Define the types
-type BookingType = "rent" | "tour" | null;
+export type BookingType = "rent" | "tour" | null;
 
-interface Booking {
-  bookingType: BookingType;
+export interface BookingState {
   email: string;
-  startDate?: string;
-  endDate?: string;
-  size?: string;
-  category?: string;
-  total?: number;
+  isEmailVerified: boolean;
+  bookingType: BookingType;
+
+  // NEW fields used on BikeBooking page
+  startDate: string | null;
+  endDate: string | null;
+  size: string | null;          // e.g. "54cm", "Medium"
+  category: string | null;      // e.g. "Road", "Mountain"
+  selectedBikeId: string | null;
 }
 
-interface BookingContextType {
-  booking: Booking;
-  setBooking: (data: Partial<Booking>) => void;
-  clearBooking: () => void;
+interface BookingContextValue {
+  booking: BookingState;
+  setBooking: (updates: Partial<BookingState>) => void;
 }
 
-// Create the context
-const BookingContext = createContext<BookingContextType | undefined>(undefined);
+const BookingContext = createContext<BookingContextValue | undefined>(
+  undefined
+);
 
-// Provider component
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
-  const [booking, setBookingState] = useState<Booking>({
-    bookingType: null,
+  const [booking, setBookingState] = useState<BookingState>({
     email: "",
+    isEmailVerified: false,
+    bookingType: null,
+
+    // NEW fields default values
+    startDate: null,
+    endDate: null,
+    size: null,
+    category: null,
+    selectedBikeId: null,
   });
 
-  const setBooking = (data: Partial<Booking>) =>
-    setBookingState((prev) => ({ ...prev, ...data }));
-
-  const clearBooking = () =>
-    setBookingState({ bookingType: null, email: "" });
+  const setBooking = (updates: Partial<BookingState>) => {
+    setBookingState((prev) => ({ ...prev, ...updates }));
+  };
 
   return (
-    <BookingContext.Provider value={{ booking, setBooking, clearBooking }}>
+    <BookingContext.Provider value={{ booking, setBooking }}>
       {children}
     </BookingContext.Provider>
   );
 };
 
-// Custom hook for easy access
-export const useBooking = () => {
-  const context = useContext(BookingContext);
-  if (!context) {
+export const useBooking = (): BookingContextValue => {
+  const ctx = useContext(BookingContext);
+  if (!ctx) {
     throw new Error("useBooking must be used within a BookingProvider");
   }
-  return context;
+  return ctx;
 };

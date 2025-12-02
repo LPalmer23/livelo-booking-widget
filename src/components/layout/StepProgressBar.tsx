@@ -1,67 +1,91 @@
-import { useLocation } from "react-router-dom";
+// src/components/layout/StepProgressBar.tsx
+import React from "react";
+import type { BookingType } from "../../context/BookingContext";
 
-const steps = [
-  { path: "/", label: "Profile" },
-  { path: "/bike-booking", label: "Booking" },
-  { path: "/tour-booking", label: "Booking" },
-  { path: "/accessories", label: "Accessories" },
-  { path: "/order-summary", label: "Payment" },
-  { path: "/confirmation", label: "Confirmation" },
+type StepId = 1 | 2 | 3 | 4 | 5 | 6;
+
+interface Step {
+  id: StepId;
+  label: string;
+}
+
+const STEPS: Step[] = [
+  { id: 1, label: "Profile" },
+  { id: 2, label: "Booking" },
+  { id: 3, label: "Accessories" },
+  { id: 4, label: "Delivery" },
+  { id: 5, label: "Payment" },
+  { id: 6, label: "Confirmation" },
 ];
 
-export default function StepProgressBar() {
-  const location = useLocation();
+interface StepProgressBarProps {
+  currentStep: StepId;
+  bookingType?: BookingType; // kept for compatibility, even if unused for now
+}
 
-  // If on /tour-booking, treat it as same step index as /bike-booking
-  const normalizedPath =
-    location.pathname === "/tour-booking" ? "/bike-booking" : location.pathname;
-
-  const currentStepIndex = steps.findIndex((s) => s.path === normalizedPath);
-
-  // Deduplicate “Booking” in display (so only shows once)
-  const displayedSteps = steps.filter(
-    (step, index, arr) =>
-      arr.findIndex((s) => s.label === step.label) === index
-  );
-
+const StepProgressBar: React.FC<StepProgressBarProps> = ({
+  currentStep,
+  bookingType, // eslint-disable-line @typescript-eslint/no-unused-vars
+}) => {
   return (
-    <div className="flex justify-center items-center space-x-4">
-      {displayedSteps.map((step, index) => {
-        const isActive = index <= currentStepIndex;
+    <div className="flex items-center justify-between gap-8">
+      {/* Steps + baseline */}
+      <div className="relative flex-1 max-w-[1000px] mx-auto">
+        {/* Grey base line – slightly inset so it doesn't hit the edges */}
+        <div
+          className="absolute left-10 right-10 top-[40%] h-[2px] bg-[#D9D9D9] -translate-y-1/2"
+          aria-hidden
+        />
 
-        return (
-          <div key={step.label} className="flex items-center space-x-2">
-            {/* Step Circle */}
-            <div
-              className={`w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm transition-all duration-300 ${
-                isActive
-                  ? "bg-rose-600 text-white shadow-md scale-105"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-            >
-              {index + 1}
-            </div>
+        <div className="relative z-10 flex items-center justify-between">
+          {STEPS.map((step) => {
+            const isActive = step.id === currentStep;
+            const isCompleted = step.id < currentStep;
 
-            {/* Step Label */}
-            <span
-              className={`transition-colors duration-300 ${
-                isActive ? "text-rose-600 font-medium" : "text-gray-400"
-              }`}
-            >
-              {step.label}
-            </span>
+            const circleClasses = [
+              "flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold",
+              "shadow-[0_4px_4px_rgba(0,0,0,0.10)]", // soft shadow for all steps
+              "transition-colors",
+              isActive
+                // active step: light green fill + dark green text
+                ? "bg-[#B5E3CB] border-[#45B57C] text-[#23764B]"
+                : isCompleted
+                // completed steps: solid green
+                ? "bg-[#45B57C] border-[#45B57C] text-white"
+                // upcoming steps: neutral grey
+                : "bg-[#E0E0E0] border-[#D0D0D0] text-[#555]",
+            ].join(" ");
 
-            {/* Connector line */}
-            {index < displayedSteps.length - 1 && (
+            return (
               <div
-                className={`w-8 h-[2px] transition-all duration-300 ${
-                  index < currentStepIndex ? "bg-rose-600" : "bg-gray-300"
-                }`}
-              />
-            )}
-          </div>
-        );
-      })}
+                key={step.id}
+                className="flex flex-col items-center gap-1 min-w-[60px]"
+              >
+                <div className={circleClasses}>{step.id}</div>
+                <span className="text-[11px] text-neutral-700">
+                  {step.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cart bubble on the right */}
+      <button
+        type="button"
+        className="relative -mt-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#D9D9D9] shadow-[0_4px_4px_rgba(0,0,0,0.10)]"
+      >
+        {/* Placeholder cart icon – swap for an SVG later */}
+        <span className="text-lg">🛒</span>
+
+        {/* Red notification badge (hard-coded “2” for now) */}
+        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E13838] text-[11px] font-semibold text-white">
+          2
+        </span>
+      </button>
     </div>
   );
-}
+};
+
+export default StepProgressBar;
