@@ -34,6 +34,23 @@ const mockBikes: Bike[] = [
     pricePerDay: 148,
     available: 1,
   },
+  {
+    id: "bike-6",
+    name: "Cannondale Synapse",
+    size: "54cm",
+    category: "Endurance",
+    pricePerDay: 130,
+    available: 3,
+  },
+  {
+    id: "bike-7",
+    name: "Cannondale Synapse",
+    size: "56cm",
+    category: "Endurance",
+    pricePerDay: 130,
+    available: 2,
+  },
+
 ];
 
 const sizeOptions = ["All sizes", "50cm", "52cm", "54cm", "56cm", "58cm"];
@@ -84,12 +101,16 @@ const BikeBooking: React.FC = () => {
         </h1>
 
         {/* Filters row */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-4xl mb-8">
+        {/* Filters: 2 × 2 layout */}
+        <div className="w-full max-w-[960px] mb-8 space-y-4">
+          {/* Row 1: start / end */}
           <CalendarPicker
             startDate={booking.startDate ?? ""}
             endDate={booking.endDate ?? ""}
             onChange={handleDatesChange}
           />
+
+          {/* Row 2: size / category */}
           <div className="grid grid-cols-2 gap-4">
             <SizeSelector
               value={booking.size ?? "All sizes"}
@@ -103,6 +124,7 @@ const BikeBooking: React.FC = () => {
             />
           </div>
         </div>
+
 
         {/* Available rentals label */}
         <div className="w-full max-w-5xl mb-4 flex items-center gap-2">
@@ -121,9 +143,7 @@ const BikeBooking: React.FC = () => {
 
         {/* Bottom progress line + buttons */}
         <div className="w-full max-w-5xl mt-10">
-          <div className="h-1 w-full bg-[#D9D9D9] mb-6 relative">
-            <div className="absolute left-0 top-0 h-1 bg-[#57B560] w-1/2" />
-          </div>
+          
 
           <div className="flex justify-between items-center">
             <button

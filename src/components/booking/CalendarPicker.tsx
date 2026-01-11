@@ -21,27 +21,63 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gray-600">Pick Start Date</label>
-        <input
-          type="date"
-          value={startDate ?? ""}
-          onChange={handleStartChange}
-          className="w-full h-11 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-        />
+      {/* Start date box */}
+      <div className="flex justify-center">
+        <div className="relative w-[460px] h-[69px]">
+          {/* Visible styled box */}
+          <div className="flex h-full w-full items-center justify-between rounded-[10px] border-[2px] border-[#EAEAEA] bg-white px-4 shadow-[0_4px_1px_rgba(0,0,0,0.25)]">
+            <span
+              className={`text-sm ${
+                startDate ? "text-[#222222]" : "text-[#777777]"
+              }`}
+            >
+              {startDate || "Pick Start Date"}
+            </span>
+            <span className="pointer-events-none text-lg leading-none text-[#555555]">
+              ⌄
+            </span>
+          </div>
+  
+          {/* Invisible input ON TOP that actually controls the date */}
+          <input
+            type="date"
+            value={startDate ?? ""}
+            onChange={handleStartChange}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+          />
+        </div>
       </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gray-600">Pick End Date</label>
-        <input
-          type="date"
-          value={endDate ?? ""}
-          onChange={handleEndChange}
-          className="w-full h-11 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-        />
+  
+      {/* End date box */}
+      <div className="flex justify-center">
+        <div className="relative w-[460px] h-[69px]">
+          {/* Visible styled box */}
+          <div className="flex h-full w-full items-center justify-between rounded-[10px] border-[2px] border-[#EAEAEA] bg-white px-4 shadow-[0_4px_1px_rgba(0,0,0,0.25)]">
+            <span
+              className={`text-sm ${
+                endDate ? "text-[#222222]" : "text-[#777777]"
+              }`}
+            >
+              {endDate || "Pick End Date"}
+            </span>
+            <span className="pointer-events-none text-lg leading-none text-[#555555]">
+              ⌄
+            </span>
+          </div>
+  
+          {/* Invisible input ON TOP */}
+          <input
+            type="date"
+            value={endDate ?? ""}
+            onChange={handleEndChange}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+          />
+        </div>
       </div>
     </div>
-  );
+  );  
 };
 
 export default CalendarPicker;

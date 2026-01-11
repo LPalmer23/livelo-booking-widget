@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide horizontal scrollbar for bike list; we use custom green bar instead */
+.bike-scroll {
+    scrollbar-width: none;           /* Firefox */
+  }
+  
+  .bike-scroll::-webkit-scrollbar {
+    height: 0;                       /* Chrome / Safari / Edge */
+  }
+  

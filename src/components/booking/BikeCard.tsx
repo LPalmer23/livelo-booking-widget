@@ -4,16 +4,12 @@ import React from "react";
 export interface Bike {
   id: string;
   name: string;
+  imageUrl?: string;
+  tags?: string[];
   pricePerDay: number;
   size: string;
   available: number;
-
-  // optional fields:
-  imageUrl?: string;
-  tags?: string[];
-  category?: string;
 }
-
 
 export interface BikeCardProps {
   bike: Bike;
@@ -26,56 +22,68 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike, isSelected, onSelect }) => {
     <button
       type="button"
       onClick={() => onSelect(bike.id)}
-      className={`flex flex-col text-left rounded-[10px] border bg-white shadow-[0_4px_4px_rgba(0,0,0,0.10)] overflow-hidden transition
-        ${isSelected ? "border-[#E13838]" : "border-[#EAEAEA]"}`}
+      className={`
+        flex h-[364px] w-[260px] shrink-0 flex-col
+        rounded-[10px] border-[3px] bg-white
+        shadow-[0_4px_1px_rgba(0,0,0,0.25)]
+        transition
+        ${isSelected ? "border-[#E13838]" : "border-[#EAEAEA]"}
+      `}
     >
-      {/* image */}
-      <div className="h-40 w-full overflow-hidden bg-[#F3F3F3]">
-        <img
-          src={bike.imageUrl}
-          alt={bike.name}
-          className="h-full w-full object-cover"
-        />
-      </div>
-
-      {/* content */}
-      <div className="flex flex-col gap-2 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#333]">{bike.name}</h3>
-          <span className="text-sm font-semibold text-[#333]">
-            ${bike.pricePerDay}/day
-          </span>
+      <div className="flex flex-1 flex-col px-4 pt-4 pb-3">
+        {/* Image area – 215 × 138 */}
+        <div className="mx-auto mb-4 flex h-[138px] w-[215px] items-center justify-center overflow-hidden">
+          {bike.imageUrl ? (
+            <img
+              src={bike.imageUrl}
+              alt={bike.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-[#F2F2F2]" />
+          )}
         </div>
 
-        {/* tags */}
-        {/* Tags */}
-        <div className="mt-2 flex flex-wrap gap-1">
-          {(bike.tags ?? []).map((tag) => (
+        {/* Title */}
+        <p className="mb-1 text-center text-sm font-semibold leading-snug text-[#222]">
+          {bike.name}
+        </p>
+
+        {/* Size */}
+        <p className="text-center text-sm font-medium text-[#222]">
+          {bike.size}
+        </p>
+
+        {/* Price */}
+        <p className="mt-1 text-center text-sm font-medium text-[#222]">
+          AUD {bike.pricePerDay.toFixed(2)} / day
+        </p>
+
+        {/* Bottom row */}
+        <div className="mt-auto flex items-end justify-between pt-4">
+          {/* Availability text */}
+          <span className="text-xs font-medium text-[#E13838]">
+            {bike.available} Available
+          </span>
+
+          {/* Select button + quantity pill */}
+          <div className="flex items-center gap-2">
             <span
-              key={tag}
-              className="rounded-full bg-[#F5F5F5] px-2 py-1 text-[10px] font-medium text-[#555]"
+              className={`
+                inline-flex items-center justify-center rounded-md px-4 py-[6px]
+                text-sm font-medium shadow-[0_4px_1px_rgba(0,0,0,0.25)]
+                ${isSelected ? "bg-[#E13838] text-white" : "bg-[#F86D6D] text-white hover:bg-[#e45555]"}
+              `}
             >
-              {tag}
+              {isSelected ? "Selected" : "Select"}
             </span>
-          ))}
-        </div>
 
-
-        <div className="mt-2 flex items-center justify-between text-xs text-[#555]">
-          <span>Size: {bike.size}</span>
-          <span>Available: {bike.available}</span>
-        </div>
-
-        <div className="mt-3 flex justify-end">
-          <span
-            className={`rounded-full px-4 py-2 text-xs font-semibold ${
-              isSelected
-                ? "bg-[#E13838] text-white"
-                : "bg-[#747474] text-white"
-            }`}
-          >
-            {isSelected ? "Selected" : "Select"}
-          </span>
+            {/* For now this just mirrors the available count;
+               later you can swap this to "quantity selected" */}
+            <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[#D4D4D4] text-sm font-medium text-[#333]">
+              {bike.available}
+            </span>
+          </div>
         </div>
       </div>
     </button>
