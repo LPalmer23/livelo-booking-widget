@@ -15,4 +15,18 @@ export interface BookingState {
   size: string | null;
   category: string | null;
   selectedBikeId: string | null;
+  cartItems: Array<{
+    id: string;
+    name: string;
+    size: string;
+    pricePerDay: number;
+    quantity: number;
+    accessories: Array<{
+      id: string;
+      name: string;
+      option: string | null;
+      pricePerDay: number;
+      quantity: number;
+    }>;
+  }>;
 }

@@ -1,6 +1,6 @@
 // src/pages/EmailVerification.tsx
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import PageWrapper from "../components/layout/PageWrapper";
 import StepProgressBar from "../components/layout/StepProgressBar";
@@ -36,6 +36,7 @@ const CheckCircle = () => (
 
 export default function EmailVerification() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { booking, setBooking } = useBooking();
 
   const [localEmail, setLocalEmail] = useState(booking.email ?? "");
@@ -43,6 +44,24 @@ export default function EmailVerification() {
   const [error, setError] = useState<string | null>(null);
 
   const isEmailVerified = booking.isEmailVerified;
+  const bypassSelection = searchParams.get("bypass") === "1";
+
+  useEffect(() => {
+    if (!bypassSelection || booking.isEmailVerified) return;
+    setBooking({
+      email: booking.email || "test@example.com",
+      isEmailVerified: true,
+      bookingType: "rent",
+    });
+    navigate(`/bike-booking?${searchParams.toString()}`);
+  }, [
+    booking.email,
+    booking.isEmailVerified,
+    bypassSelection,
+    navigate,
+    searchParams,
+    setBooking,
+  ]);
 
   const handleValidate = (e: FormEvent) => {
     e.preventDefault();
@@ -68,11 +87,13 @@ export default function EmailVerification() {
   const handleChooseBooking = (type: "rent" | "tour") => {
     if (!isEmailVerified) return; // safety guard
     setBooking({ bookingType: type });
+    const queryString = searchParams.toString();
+    const suffix = queryString ? `?${queryString}` : "";
 
     if (type === "rent") {
-      navigate("/bike-booking");
+      navigate(`/bike-booking${suffix}`);
     } else {
-      navigate("/tour-booking");
+      navigate(`/tour-booking${suffix}`);
     }
   };
 

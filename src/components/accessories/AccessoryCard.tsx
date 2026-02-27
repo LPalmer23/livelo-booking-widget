@@ -14,12 +14,20 @@ export type Accessory = {
 interface AccessoryCardProps {
   accessory: Accessory;
   selectedOption: AccessoryOption | null;
+  selectedQuantity: number;
+  availableCount: number;
+  isDisabled?: boolean;
+  isDimmed?: boolean;
   onOpenModal: () => void;
 }
 
 const AccessoryCard: React.FC<AccessoryCardProps> = ({
   accessory,
   selectedOption,
+  selectedQuantity,
+  availableCount,
+  isDisabled = false,
+  isDimmed = false,
   onOpenModal,
 }) => {
   const { name, pricePerDay, imageSrc } = accessory;
@@ -28,11 +36,12 @@ const AccessoryCard: React.FC<AccessoryCardProps> = ({
 
   return (
     <div
-  className={[
-    "w-[260px] flex-shrink-0 bg-white rounded-xl shadow-md border flex flex-col overflow-hidden",
-    isSelected ? "border-[#57B560]" : "border-gray-200",
-  ].join(" ")}
->
+      className={[
+        "w-[260px] flex-shrink-0 bg-white rounded-xl shadow-md border flex flex-col overflow-hidden transition-opacity",
+        isSelected ? "border-[#57B560]" : "border-gray-200",
+        isDimmed ? "opacity-50" : "",
+      ].join(" ")}
+    >
 
       {/* image */}
       <div className="h-32 bg-gray-100 flex items-center justify-center">
@@ -53,15 +62,26 @@ const AccessoryCard: React.FC<AccessoryCardProps> = ({
           )}
         </div>
 
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex items-center justify-between">
+          <span
+            className={`flex h-7 w-7 items-center justify-center rounded-md border text-sm font-medium ${
+              selectedQuantity >= availableCount
+                ? "border-[#E13838] text-[#E13838]"
+                : "border-[#D4D4D4] text-[#333]"
+            }`}
+          >
+            {selectedQuantity}
+          </span>
           <button
             type="button"
             onClick={onOpenModal}
+            disabled={isDisabled}
             className={[
               "px-4 py-1.5 rounded-md text-xs font-semibold border",
               isSelected
                 ? "bg-white text-[#F9625D] border-[#F9625D]"
                 : "bg-[#F9625D] text-white border-[#F9625D] hover:bg-[#f8504a]",
+              isDisabled ? "opacity-50 cursor-not-allowed hover:bg-[#F9625D]" : "",
             ].join(" ")}
           >
             {isSelected ? "Edit" : "Select"}

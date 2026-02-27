@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageWrapper from "../components/layout/PageWrapper";
 import StepProgressBar from "../components/layout/StepProgressBar";
 import { useBooking } from "../context/BookingContext";
@@ -8,63 +8,182 @@ import CalendarPicker from "../components/booking/CalendarPicker";
 import SizeSelector from "../components/booking/SizeSelector";
 import CategorySelector from "../components/booking/CategorySelector";
 import BikeList, { type Bike } from "../components/booking/BikeList";
+import { getAvailableVariants, type AvailableVariant } from "../utils/api";
 
-const mockBikes: Bike[] = [
-  {
-    id: "bike-1",
-    name: "Chapter2 TOA – Ultegra Di2",
-    size: "54cm",
-    category: "Road",
-    pricePerDay: 148,
-    available: 3,
-  },
-  {
-    id: "bike-2",
-    name: "Chapter2 TOA – Ultegra Di2",
-    size: "56cm",
-    category: "Road",
-    pricePerDay: 148,
-    available: 2,
-  },
-  {
-    id: "bike-3",
-    name: "Chapter2 TOA – Ultegra Di2",
-    size: "58cm",
-    category: "Road",
-    pricePerDay: 148,
-    available: 1,
-  },
-  {
-    id: "bike-6",
-    name: "Cannondale Synapse",
-    size: "54cm",
-    category: "Endurance",
-    pricePerDay: 130,
-    available: 3,
-  },
-  {
-    id: "bike-7",
-    name: "Cannondale Synapse",
-    size: "56cm",
-    category: "Endurance",
-    pricePerDay: 130,
-    available: 2,
-  },
+type MockInventoryItem = {
+  id: string;
+  name: string;
+  size: string;
+  category: string;
+  pricePerDay: number;
+};
 
+const mockInventory: MockInventoryItem[] = [
+  { id: "toa-54-1", name: "Chapter2 TOA – Ultegra Di2", size: "54cm", category: "Road", pricePerDay: 148 },
+  { id: "toa-54-2", name: "Chapter2 TOA – Ultegra Di2", size: "54cm", category: "Road", pricePerDay: 148 },
+  { id: "toa-54-3", name: "Chapter2 TOA – Ultegra Di2", size: "54cm", category: "Road", pricePerDay: 148 },
+  { id: "toa-56-1", name: "Chapter2 TOA – Ultegra Di2", size: "56cm", category: "Road", pricePerDay: 148 },
+  { id: "toa-56-2", name: "Chapter2 TOA – Ultegra Di2", size: "56cm", category: "Road", pricePerDay: 148 },
+  { id: "toa-58-1", name: "Chapter2 TOA – Ultegra Di2", size: "58cm", category: "Road", pricePerDay: 148 },
+  { id: "syn-54-1", name: "Cannondale Synapse", size: "54cm", category: "Endurance", pricePerDay: 130 },
+  { id: "syn-54-2", name: "Cannondale Synapse", size: "54cm", category: "Endurance", pricePerDay: 130 },
+  { id: "syn-54-3", name: "Cannondale Synapse", size: "54cm", category: "Endurance", pricePerDay: 130 },
+  { id: "syn-56-1", name: "Cannondale Synapse", size: "56cm", category: "Endurance", pricePerDay: 130 },
+  { id: "syn-56-2", name: "Cannondale Synapse", size: "56cm", category: "Endurance", pricePerDay: 130 },
 ];
 
-const sizeOptions = ["All sizes", "50cm", "52cm", "54cm", "56cm", "58cm"];
 const categoryOptions = ["All categories", "Road", "Gravel", "TT", "E-Bike"];
 
 const BikeBooking: React.FC = () => {
   const navigate = useNavigate();
-  const { booking, setBooking } = useBooking();
+  const [searchParams] = useSearchParams();
+  const { booking, setBooking, addToCart, removeFromCart } = useBooking();
+  const [bikes, setBikes] = useState<Bike[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // If they somehow hit this route without picking a flow,
-  // just send them back to the email step.
-  if (!booking.isEmailVerified) {
-    navigate("/");
-  }
+  const productId = useMemo(() => {
+    const value = searchParams.get("productId");
+    return value ? Number(value) : null;
+  }, [searchParams]);
+
+  const locationId = useMemo(() => {
+    const value = searchParams.get("locationId");
+    return value ? Number(value) : null;
+  }, [searchParams]);
+
+  const productTitle =
+    searchParams.get("productTitle") ?? "Livelo Bike Rental";
+  const productImage = searchParams.get("productImage") ?? undefined;
+  const bypassSelection = searchParams.get("bypass") === "1";
+  const useMockInventory =
+    searchParams.get("inventory") === "mock" || (!productId && !locationId);
+
+  const selectedQuantities = useMemo(() => {
+    return booking.cartItems.reduce<Record<string, number>>((acc, item) => {
+      const key = `${item.name}__${item.size}`;
+      acc[key] = (acc[key] ?? 0) + item.quantity;
+      return acc;
+    }, {});
+  }, [booking.cartItems]);
+
+  // Allow viewing booking even without email verification for now.
+
+  useEffect(() => {
+    setBooking({
+      productId,
+      locationId,
+      selectedBikeName: productTitle,
+      selectedBikeImage: productImage ?? null,
+    });
+  }, [locationId, productId, productImage, productTitle, setBooking]);
+
+  useEffect(() => {
+    const canFetch =
+      productId &&
+      locationId &&
+      booking.startDate &&
+      booking.endDate;
+
+    if (useMockInventory) {
+      const grouped = new Map<string, Bike>();
+      for (const item of mockInventory) {
+        const key = `${item.name}__${item.size}`;
+        const existing = grouped.get(key);
+        if (existing) {
+          existing.available += 1;
+        } else {
+          grouped.set(key, {
+            id: item.id,
+            name: item.name,
+            size: item.size,
+            pricePerDay: item.pricePerDay,
+            available: 1,
+          });
+        }
+      }
+      setBikes(Array.from(grouped.values()));
+      setLoadError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!canFetch) {
+      setBikes([]);
+      setLoadError(null);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchVariants = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const data = await getAvailableVariants({
+          productId,
+          locationId,
+          startDate: booking.startDate as string,
+          endDate: booking.endDate as string,
+        });
+
+        if (!isMounted) return;
+
+        const mapped: Bike[] = (data || []).map(
+          (variant: AvailableVariant, index: number) => {
+            const variantId =
+              variant.product_variant_id ??
+              variant.variant_id ??
+              index;
+            const size = String(variant.variant_value ?? "One size");
+            const pricePerDay = Number(variant.base_price ?? 0);
+            const inStock =
+              typeof variant.in_stock === "boolean"
+                ? variant.in_stock
+                : Boolean(variant.in_stock ?? true);
+
+            return {
+              id: String(variantId),
+              name: productTitle,
+              imageUrl: productImage,
+              size,
+              pricePerDay,
+              available: inStock ? 1 : 0,
+            };
+          }
+        );
+
+        setBikes(mapped);
+
+        const stillSelected = mapped.some(
+          (bike) => bike.id === booking.selectedBikeId
+        );
+        if (!stillSelected && booking.selectedBikeId) {
+          setBooking({ selectedBikeId: null });
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        setLoadError("Unable to load availability. Try again.");
+        setBikes([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchVariants();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    booking.endDate,
+    booking.selectedBikeId,
+    booking.startDate,
+    locationId,
+    productId,
+    productImage,
+    productTitle,
+    setBooking,
+  ]);
 
   const handleDatesChange = (startDate: string, endDate: string) => {
     setBooking({ startDate, endDate });
@@ -79,16 +198,57 @@ const BikeBooking: React.FC = () => {
   };
 
   const handleSelectBike = (bikeId: string) => {
-    setBooking({ selectedBikeId: bikeId });
+    const selected = bikes.find((bike) => bike.id === bikeId);
+    if (selected) {
+      const key = `${selected.name}__${selected.size}`;
+      const currentQty = selectedQuantities[key] ?? 0;
+      if (currentQty >= selected.available) {
+        return;
+      }
+    }
+    if (selected) {
+      const cartItemId = `${selected.id}-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      addToCart({
+        id: cartItemId,
+        name: selected.name,
+        size: selected.size,
+        pricePerDay: selected.pricePerDay,
+      });
+    }
+    setBooking({
+      selectedBikeId: bikeId,
+      selectedBikePricePerDay: selected?.pricePerDay ?? null,
+      selectedBikeName: selected?.name ?? productTitle,
+      selectedBikeImage: selected?.imageUrl ?? productImage ?? null,
+      selectedBikeCurrency: "AUD",
+    });
+  };
+
+  const handleRemoveBike = (bikeId: string) => {
+    const selected = bikes.find((bike) => bike.id === bikeId);
+    if (!selected) return;
+    removeFromCart({ name: selected.name, size: selected.size });
   };
 
   const handleNext = () => {
-    if (!booking.selectedBikeId) return;
     navigate("/accessories");
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/accessories") {
+        window.location.assign("/accessories");
+      }
+    }, 0);
   };
 
   const handleBack = () => {
+    setBooking({ email: "", isEmailVerified: false });
     navigate("/");
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/") {
+        window.location.assign("/");
+      }
+    }, 0);
   };
 
   return (
@@ -114,7 +274,6 @@ const BikeBooking: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <SizeSelector
               value={booking.size ?? "All sizes"}
-              options={sizeOptions}
               onChange={handleSizeChange}
             />
             <CategorySelector
@@ -135,11 +294,39 @@ const BikeBooking: React.FC = () => {
         </div>
 
         {/* Bike cards */}
-        <BikeList
-          bikes={mockBikes}
-          selectedBikeId={booking.selectedBikeId ?? undefined}
-          onSelect={handleSelectBike}
-        />
+
+        {isLoading && (
+          <div className="w-full max-w-5xl rounded-md border border-[#EAEAEA] bg-[#FAFAFA] px-4 py-3 text-sm text-[#555]">
+            Loading availability...
+          </div>
+        )}
+
+        {loadError && (
+          <div className="w-full max-w-5xl rounded-md border border-[#F3C2C2] bg-[#FFF5F5] px-4 py-3 text-sm text-[#B3261E]">
+            {loadError}
+          </div>
+        )}
+
+        {!isLoading &&
+          !loadError &&
+          bikes.length === 0 &&
+          productId &&
+          locationId &&
+          !useMockInventory && (
+          <div className="w-full max-w-5xl rounded-md border border-[#EAEAEA] bg-[#FAFAFA] px-4 py-3 text-sm text-[#555]">
+            Select your dates to see availability.
+          </div>
+        )}
+
+        {!isLoading && !loadError && bikes.length > 0 && (
+          <BikeList
+            bikes={bikes}
+            selectedBikeId={booking.selectedBikeId}
+            onSelectBike={handleSelectBike}
+            onRemoveBike={handleRemoveBike}
+            selectedQuantities={selectedQuantities}
+          />
+        )}
 
         {/* Bottom progress line + buttons */}
         <div className="w-full max-w-5xl mt-10">
@@ -157,17 +344,19 @@ const BikeBooking: React.FC = () => {
             <button
               type="button"
               onClick={handleNext}
-              disabled={!booking.selectedBikeId}
               className={`px-8 py-2 rounded-md text-sm font-medium text-white
                 ${
-                  booking.selectedBikeId
-                    ? "bg-black hover:bg-gray-800"
-                    : "bg-gray-300 cursor-not-allowed"
+                  "bg-black hover:bg-gray-800"
                 }`}
             >
               Next →
             </button>
           </div>
+        {bypassSelection && (
+          <div className="mt-3 text-xs text-neutral-500">
+            Bypass enabled: add a bike later in checkout.
+          </div>
+        )}
         </div>
       </div>
     </PageWrapper>

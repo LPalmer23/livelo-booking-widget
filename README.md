@@ -1,3 +1,52 @@
+# Livelo Booking Widget
+
+## Shopify Embed (Iframe MVP)
+
+Embed the widget in a Shopify page (product page, custom page, or section).
+
+```html
+<iframe
+  src="https://widget.livelo.bike/?productId=14&locationId=5"
+  style="width: 100%; border: 0;"
+  height="920"
+  loading="lazy"
+  title="Livelo Booking Widget"
+></iframe>
+```
+
+### Supported query params
+
+- `productId` (required): Livelo product ID
+- `locationId` (required): Livelo location ID
+- `productTitle` (optional): display name in booking
+- `productImage` (optional): image URL to show on booking/summary
+- `theme` (optional): theme hint for future styling
+
+Example with optional params:
+
+```
+https://widget.livelo.bike/?productId=14&locationId=5&productTitle=Chapter2%20TOA&productImage=https://example.com/toa.jpg
+```
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Create `.env` (see `.env.example`):
+
+```
+VITE_LIVELO_API_BASE_URL=http://localhost:3000
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+## Notes
+
+- Stripe and order creation require authentication on `livelo2.0`.
+- The widget currently expects `productId` and `locationId` in the URL.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
