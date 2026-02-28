@@ -32,7 +32,14 @@ const mockInventory: MockInventoryItem[] = [
   { id: "syn-56-2", name: "Cannondale Synapse", size: "56cm", category: "Endurance", pricePerDay: 130 },
 ];
 
-const categoryOptions = ["All categories", "Road", "Gravel", "TT", "E-Bike"];
+/** Bikes unavailable when selected dates overlap these ranges (for mock date filtering) */
+const mockUnavailableRanges: Record<string, Array<{ start: string; end: string }>> = {
+  "Chapter2 TOA – Ultegra Di2__58cm": [{ start: "2025-03-01", end: "2025-03-15" }],
+  "Cannondale Synapse__56cm": [{ start: "2025-02-10", end: "2025-02-20" }],
+  "Chapter2 TOA – Ultegra Di2__56cm": [{ start: "2025-04-01", end: "2025-04-10" }],
+};
+
+const categoryOptions = ["All categories", "Road", "Endurance", "Gravel", "TT", "E-Bike"];
 
 const BikeBooking: React.FC = () => {
   const navigate = useNavigate();
@@ -78,13 +85,8 @@ const BikeBooking: React.FC = () => {
     });
   }, [locationId, productId, productImage, productTitle, setBooking]);
 
-  useEffect(() => {
-    const canFetch =
-      productId &&
-      locationId &&
-      booking.startDate &&
-      booking.endDate;
-
+  // Build "all bikes" - from mock (always) or from API (when dates set)
+  const allBikes = useMemo(() => {
     if (useMockInventory) {
       const grouped = new Map<string, Bike>();
       for (const item of mockInventory) {
@@ -97,12 +99,26 @@ const BikeBooking: React.FC = () => {
             id: item.id,
             name: item.name,
             size: item.size,
+            category: item.category,
             pricePerDay: item.pricePerDay,
             available: 1,
           });
         }
       }
-      setBikes(Array.from(grouped.values()));
+      return Array.from(grouped.values());
+    }
+    return bikes;
+  }, [useMockInventory, bikes]);
+
+  // Fetch from API when we have productId, locationId, and dates
+  useEffect(() => {
+    const canFetch =
+      productId &&
+      locationId &&
+      booking.startDate &&
+      booking.endDate;
+
+    if (useMockInventory) {
       setLoadError(null);
       setIsLoading(false);
       return;
@@ -140,6 +156,7 @@ const BikeBooking: React.FC = () => {
               typeof variant.in_stock === "boolean"
                 ? variant.in_stock
                 : Boolean(variant.in_stock ?? true);
+            const category = (variant as Record<string, unknown>).category as string | undefined;
 
             return {
               id: String(variantId),
@@ -148,6 +165,7 @@ const BikeBooking: React.FC = () => {
               size,
               pricePerDay,
               available: inStock ? 1 : 0,
+              category,
             };
           }
         );
@@ -183,6 +201,48 @@ const BikeBooking: React.FC = () => {
     productImage,
     productTitle,
     setBooking,
+    useMockInventory,
+  ]);
+
+  // Filter bikes by date (mock only), size, and category
+  const filteredBikes = useMemo(() => {
+    let result = allBikes;
+
+    // Date filter (mock): remove bikes unavailable for selected date range
+    if (useMockInventory && booking.startDate && booking.endDate) {
+      const start = booking.startDate;
+      const end = booking.endDate;
+      result = result.filter((bike) => {
+        const key = `${bike.name}__${bike.size}`;
+        const ranges = mockUnavailableRanges[key];
+        if (!ranges) return true;
+        const overlaps = ranges.some(
+          (r) => !(end < r.start || start > r.end)
+        );
+        return !overlaps;
+      });
+    }
+
+    // Size filter
+    const sizeFilter = booking.size?.trim();
+    if (sizeFilter && sizeFilter !== "All sizes") {
+      result = result.filter((bike) => bike.size === sizeFilter);
+    }
+
+    // Category filter
+    const categoryFilter = booking.category?.trim();
+    if (categoryFilter && categoryFilter !== "All categories") {
+      result = result.filter((bike) => bike.category === categoryFilter);
+    }
+
+    return result;
+  }, [
+    allBikes,
+    useMockInventory,
+    booking.startDate,
+    booking.endDate,
+    booking.size,
+    booking.category,
   ]);
 
   const handleDatesChange = (startDate: string, endDate: string) => {
@@ -198,7 +258,7 @@ const BikeBooking: React.FC = () => {
   };
 
   const handleSelectBike = (bikeId: string) => {
-    const selected = bikes.find((bike) => bike.id === bikeId);
+    const selected = allBikes.find((bike) => bike.id === bikeId);
     if (selected) {
       const key = `${selected.name}__${selected.size}`;
       const currentQty = selectedQuantities[key] ?? 0;
@@ -227,7 +287,7 @@ const BikeBooking: React.FC = () => {
   };
 
   const handleRemoveBike = (bikeId: string) => {
-    const selected = bikes.find((bike) => bike.id === bikeId);
+    const selected = allBikes.find((bike) => bike.id === bikeId);
     if (!selected) return;
     removeFromCart({ name: selected.name, size: selected.size });
   };
@@ -273,7 +333,7 @@ const BikeBooking: React.FC = () => {
           {/* Row 2: size / category */}
           <div className="grid grid-cols-2 gap-4">
             <SizeSelector
-              value={booking.size ?? "All sizes"}
+              value={!booking.size || booking.size === "All sizes" ? "" : booking.size}
               onChange={handleSizeChange}
             />
             <CategorySelector
@@ -309,18 +369,28 @@ const BikeBooking: React.FC = () => {
 
         {!isLoading &&
           !loadError &&
-          bikes.length === 0 &&
+          filteredBikes.length === 0 &&
           productId &&
           locationId &&
-          !useMockInventory && (
+          !useMockInventory &&
+          !booking.startDate && (
           <div className="w-full max-w-5xl rounded-md border border-[#EAEAEA] bg-[#FAFAFA] px-4 py-3 text-sm text-[#555]">
             Select your dates to see availability.
           </div>
         )}
 
-        {!isLoading && !loadError && bikes.length > 0 && (
+        {!isLoading &&
+          !loadError &&
+          filteredBikes.length === 0 &&
+          (useMockInventory ? allBikes.length > 0 : bikes.length > 0) && (
+          <div className="w-full max-w-5xl rounded-md border border-[#EAEAEA] bg-[#FAFAFA] px-4 py-3 text-sm text-[#555]">
+            No bikes match your filters. Try adjusting dates, size, or category.
+          </div>
+        )}
+
+        {!isLoading && !loadError && filteredBikes.length > 0 && (
           <BikeList
-            bikes={bikes}
+            bikes={filteredBikes}
             selectedBikeId={booking.selectedBikeId}
             onSelectBike={handleSelectBike}
             onRemoveBike={handleRemoveBike}
@@ -336,7 +406,7 @@ const BikeBooking: React.FC = () => {
             <button
               type="button"
               onClick={handleBack}
-              className="px-6 py-2 rounded-md border border-gray-400 text-sm text-gray-700 hover:bg-gray-50"
+              className="min-w-[112px] px-6 py-2 rounded-md border border-gray-400 text-sm text-gray-700 hover:bg-gray-50"
             >
               ← Back
             </button>
@@ -344,10 +414,7 @@ const BikeBooking: React.FC = () => {
             <button
               type="button"
               onClick={handleNext}
-              className={`px-8 py-2 rounded-md text-sm font-medium text-white
-                ${
-                  "bg-black hover:bg-gray-800"
-                }`}
+              className="min-w-[112px] px-6 py-2 rounded-md text-sm font-medium text-white bg-black hover:bg-gray-800"
             >
               Next →
             </button>

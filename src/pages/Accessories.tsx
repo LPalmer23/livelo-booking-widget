@@ -409,7 +409,7 @@ const Accessories: React.FC = () => {
             <button
               type="button"
               onClick={handleBack}
-              className="px-6 py-2 rounded-md border border-gray-400 text-sm text-gray-700 hover:bg-gray-50"
+              className="min-w-[112px] px-6 py-2 rounded-md border border-gray-400 text-sm text-gray-700 hover:bg-gray-50"
             >
               ← Back
             </button>
@@ -417,7 +417,7 @@ const Accessories: React.FC = () => {
             <button
               type="button"
               onClick={handleNext}
-              className="px-8 py-2 rounded-md text-sm font-medium text-white bg-black hover:bg-gray-800"
+              className="min-w-[112px] px-6 py-2 rounded-md text-sm font-medium text-white bg-black hover:bg-gray-800"
             >
               Next →
             </button>

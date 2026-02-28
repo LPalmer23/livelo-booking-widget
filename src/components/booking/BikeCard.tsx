@@ -9,6 +9,7 @@ export interface Bike {
   pricePerDay: number;
   size: string;
   available: number;
+  category?: string;
 }
 
 export interface BikeCardProps {
@@ -31,10 +32,10 @@ const BikeCard: React.FC<BikeCardProps> = ({
     <div
       className={`
         flex h-[364px] w-[260px] shrink-0 flex-col
-        rounded-[10px] border-[3px] bg-white
+        rounded-[10px] border bg-white
         shadow-[0_4px_1px_rgba(0,0,0,0.25)]
         transition
-        ${isSelected ? "border-[#E13838]" : "border-[#EAEAEA]"}
+        ${selectedQuantity > 0 ? "border-[#57B560]" : "border-[#EAEAEA]"}
       `}
     >
       <div className="flex flex-1 flex-col px-4 pt-4 pb-3">
@@ -73,8 +74,26 @@ const BikeCard: React.FC<BikeCardProps> = ({
             {leftAvailable} left available
           </span>
 
-          {/* Select button + quantity pill */}
+          {/* Reduce button + quantity display + Add button */}
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onRemove(bike.id)}
+              disabled={selectedQuantity === 0}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-sm font-medium ${
+                selectedQuantity === 0
+                  ? "border-[#D4D4D4] text-[#999] cursor-not-allowed"
+                  : "border-[#D4D4D4] text-[#333] hover:bg-[#F3F3F3]"
+              }`}
+            >
+              −
+            </button>
+            <div
+              className="flex h-7 min-w-[28px] items-center justify-center rounded-md border border-[#D4D4D4] bg-white px-2 text-sm font-medium text-[#333]"
+              aria-live="polite"
+            >
+              {selectedQuantity}
+            </div>
             <button
               type="button"
               onClick={() => onSelect(bike.id)}
@@ -85,19 +104,6 @@ const BikeCard: React.FC<BikeCardProps> = ({
               `}
             >
               {isSelected ? "Selected" : "Add"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onRemove(bike.id)}
-              disabled={selectedQuantity === 0}
-              className={`flex h-7 w-7 items-center justify-center rounded-md border text-sm font-medium ${
-                selectedQuantity === 0
-                  ? "border-[#D4D4D4] text-[#999] cursor-not-allowed"
-                  : "border-[#D4D4D4] text-[#333] hover:bg-[#F3F3F3]"
-              }`}
-            >
-              −
             </button>
           </div>
         </div>
