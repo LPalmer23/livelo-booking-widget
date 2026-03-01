@@ -26,7 +26,6 @@ interface StepProgressBarProps {
 
 const StepProgressBar: React.FC<StepProgressBarProps> = ({
   currentStep,
-  bookingType, // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   const { booking } = useBooking();
   const [isCartOpen, setIsCartOpen] = useState(false);

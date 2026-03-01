@@ -225,8 +225,8 @@ export default function Delivery() {
     <PageWrapper>
       <StepProgressBar currentStep={4} bookingType={(booking as any).bookingType} />
 
-      <div className="mx-auto mt-8 w-full max-w-4xl">
-        <h1 className="text-center text-4xl font-semibold tracking-tight text-neutral-900">
+      <div className="mx-auto mt-10 w-full max-w-4xl">
+        <h1 className="text-center text-3xl font-semibold tracking-tight text-neutral-900">
           Enter Your Accommodation Address
         </h1>
 

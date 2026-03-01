@@ -13,7 +13,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "helmet-1",
     name: "Helmet",
-    pricePerDay: 0,
+    pricePerDay: 5,
     imageSrc: "/images/helmet-placeholder.jpg",
     description: "High quality road helmet with adjustable fit.",
     options: ["S", "M", "L"],
@@ -21,7 +21,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "helmet-2",
     name: "Helmet",
-    pricePerDay: 0,
+    pricePerDay: 8,
     imageSrc: "/images/helmet-placeholder.jpg",
     description: "High quality road helmet with adjustable fit.",
     options: ["S", "M", "L"],
@@ -29,7 +29,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "helmet-3",
     name: "Helmet",
-    pricePerDay: 0,
+    pricePerDay: 12,
     imageSrc: "/images/helmet-placeholder.jpg",
     description: "High quality road helmet with adjustable fit.",
     options: ["S", "M", "L"],
@@ -39,7 +39,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "pedals-1",
     name: "Shimano SPD Road Pedals",
-    pricePerDay: 0,
+    pricePerDay: 8,
     imageSrc: "/images/pedals-placeholder.jpg",
     description: "SPD-SL road pedals. Bring your own shoes.",
     options: ["One size"],
@@ -47,7 +47,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "pedals-2",
     name: "Shimano SPD Road Pedals",
-    pricePerDay: 0,
+    pricePerDay: 10,
     imageSrc: "/images/pedals-placeholder.jpg",
     description: "SPD-SL road pedals. Bring your own shoes.",
     options: ["One size"],
@@ -55,7 +55,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "pedals-3",
     name: "Shimano SPD Road Pedals",
-    pricePerDay: 0,
+    pricePerDay: 12,
     imageSrc: "/images/pedals-placeholder.jpg",
     description: "SPD-SL road pedals. Bring your own shoes.",
     options: ["One size"],
@@ -65,7 +65,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "saddle-bag",
     name: "Saddle Bag",
-    pricePerDay: 0,
+    pricePerDay: 3,
     imageSrc: "/images/saddlebag-placeholder.jpg",
     description: "Compact saddle bag for tools and snacks.",
     options: ["Standard"],
@@ -73,7 +73,7 @@ const ACCESSORIES: Accessory[] = [
   {
     id: "tour-1",
     name: "1 Hour Tour",
-    pricePerDay: 0,
+    pricePerDay: 25,
     imageSrc: "/images/tour-placeholder.jpg",
     description: "Guided 1-hour ride to explore the local area.",
     options: ["One size"],
@@ -254,7 +254,7 @@ const Accessories: React.FC = () => {
               selectedOption={getAccessoryOptionForBike(bikeKey, acc.id)}
               selectedQuantity={accessoryQuantities[acc.id] ?? 0}
               availableCount={accessoryAvailability[acc.id] ?? 1}
-              isDisabled={
+              isDisabled={Boolean(
                 (accessoryQuantities[acc.id] ?? 0) >=
                   (accessoryAvailability[acc.id] ?? 1) ||
                 (getAccessoryCategory(acc.id) === "helmet" &&
@@ -263,15 +263,15 @@ const Accessories: React.FC = () => {
                 (getAccessoryCategory(acc.id) === "pedals" &&
                   selectedPedalId &&
                   selectedPedalId !== acc.id)
-              }
-              isDimmed={
+              )}
+              isDimmed={Boolean(
                 (getAccessoryCategory(acc.id) === "helmet" &&
                   selectedHelmetId &&
                   selectedHelmetId !== acc.id) ||
                 (getAccessoryCategory(acc.id) === "pedals" &&
                   selectedPedalId &&
                   selectedPedalId !== acc.id)
-              }
+              )}
               onOpenModal={() => {
                 setActiveBikeId(bikeKey);
                 setOpenAccessory(acc);
@@ -300,8 +300,8 @@ const Accessories: React.FC = () => {
     <PageWrapper>
       <StepProgressBar currentStep={3} />
 
-      <div className="mt-14 flex flex-col items-center">
-        <h1 className="text-[32px] font-semibold text-black mb-6">
+      <div className="mt-10 flex flex-col items-center">
+        <h1 className="text-3xl font-semibold text-black mb-6">
           Choose Your Accessories
         </h1>
 

@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure root fills viewport so content is visible */
+html,
+body,
+#root {
+  min-height: 100vh;
+  background-color: #e5e5e5;
+}
+
 /* Hide horizontal scrollbar for bike list; we use custom green bar instead */
 .bike-scroll {
     scrollbar-width: none;           /* Firefox */

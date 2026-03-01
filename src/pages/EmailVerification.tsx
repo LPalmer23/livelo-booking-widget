@@ -105,7 +105,7 @@ export default function EmailVerification() {
 
       <div className="flex flex-col items-center mt-10">
         {/* Main heading */}
-        <h1 className="text-4xl font-semibold text-center text-black mb-2">
+        <h1 className="text-3xl font-semibold text-center text-black mb-2">
           Let&apos;s get started
         </h1>
 

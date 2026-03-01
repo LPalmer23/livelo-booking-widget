@@ -315,8 +315,8 @@ const BikeBooking: React.FC = () => {
     <PageWrapper>
       <StepProgressBar currentStep={2} />
 
-      <div className="mt-14 flex flex-col items-center">
-        <h1 className="text-[32px] font-semibold text-black mb-6">
+      <div className="mt-10 flex flex-col items-center">
+        <h1 className="text-3xl font-semibold text-black mb-6">
           Select Your Bike
         </h1>
 

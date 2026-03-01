@@ -1,31 +1,31 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   CardElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import type { StripePaymentIntent } from "@stripe/stripe-js";
+import type { PaymentIntent } from "@stripe/stripe-js";
 
 import { getStripePaymentIntent } from "../../hooks/useStripePayment";
 
 type StripeCheckoutProps = {
   amount: number;
   currency: string;
-  onPaymentSuccess: (paymentIntent: StripePaymentIntent) => void;
+  onPaymentSuccess: (paymentIntent: PaymentIntent) => void;
 };
 
-const StripeCheckout: React.FC<StripeCheckoutProps> = ({
+function StripeCheckout({
   amount,
   currency,
   onPaymentSuccess,
-}) => {
+}: StripeCheckoutProps) {
   const stripe = useStripe();
   const elements = useElements();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setErrorMessage(null);
 

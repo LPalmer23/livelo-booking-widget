@@ -8,8 +8,8 @@ export default function TourBooking() {
   return (
     <PageWrapper>
       <StepProgressBar currentStep={2} />
-      <div className="flex flex-col items-center justify-center text-center">
-        <h1 className="text-3xl font-bold">Tour Booking Page</h1>
+      <div className="flex flex-col items-center justify-center text-center mt-10">
+        <h1 className="text-3xl font-semibold">Tour Booking Page</h1>
         <button
           type="button"
           onClick={() => navigate("/")}
